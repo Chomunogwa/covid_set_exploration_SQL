@@ -1,0 +1,76 @@
+select * from covid_zw;
+
+
+
+select location, date, total_cases, new_cases, total_deaths, population
+from covid_zw;
+
+--Looking at total cases vs total deaths.
+-- It will show the likelihood of dying if you get the covid virus
+select location, date, total_cases, total_deaths, (total_deaths / total_cases)*100 as DeathPercentage
+from covid_zw
+where location = "Zimbabwe"
+order by 1,2;
+
+--Looking at total cases vs population
+
+select location, date, total_cases, population, (total_cases / population)*100 as DeathPercentage
+from covid_zw
+where location = "Zimbabwe"
+order by 1,2;
+
+--Looking at countries with the highest infection rate to population
+select location, population, max(total_cases)as HighestInfectedCount, max(total_cases / population)*100 as PercentPopulationInfected
+from covid_zw
+group by location, population
+order by percentpopulationinfected desc;
+
+--Looking for countries with the highest death count per population
+select location, max(total_deaths)as totaldeaths, max(total_deaths / population)*100 as totaldeathcount
+from covid_zw
+where continent is not null
+group by location, population
+order by totaldeathcount desc;
+
+--Checking to see by continent
+select continent, max(total_deaths)as totaldeaths 
+from covid_zw
+where continent is not null
+group by continent
+order by totaldeaths desc;
+
+--World figures
+select date, sum(new_cases) as total_cases, sum(new_deaths) as total_deaths, sum(new_deaths / new_cases)*100 as TotalDeathPercentage
+from covid_zw
+where continent is not null
+group by date
+order by 1,2;
+
+--Looking at total vaccinated vs population
+select continent, location, date, population, new_vaccinations 
+,sum(new_vaccinations) over (partition by location order by location, date)as RollingofVaccines
+--,(RollingofVaccines / population)*100
+from covid_zw
+where continent is not null
+order by 2,3;
+
+create table percentpopvaccinating
+(continent varchar (255),
+location varchar (255),
+Date datetime,
+population interger,
+new_vaccinations interger,
+RollingofVaccines interger);
+
+insert into percentpopvaccinating
+select *
+,sum(new_vaccinations) over (partition by location order by location, date)as RollingofVaccines
+,(RollingofVaccines / population)*100
+from percentpopvaccinating
+where continent is not null
+order by 2,3;
+
+
+
+
+
